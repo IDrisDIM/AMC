@@ -1,0 +1,46 @@
+#include "GetInitData.hh"
+
+
+//AAMCCrun getTheRunData(const TString& inputFileName="test.root")
+AAMCCrun getTheRunData(const TString& inputFileName, double critDist)
+{
+	AAMCCrun runData;
+	TFile *fIn = new TFile(inputFileName, "read");
+	URun *run = (URun *)fIn->Get("run");
+
+	// TTree *tree = (TTree *)fIn->Get("events");
+	// EventInitialState *iniState{nullptr};
+	// tree->SetBranchAddress("iniState", &iniState);
+
+	runData.AinitA = run->GetAProj();
+	runData.ZinitA = run->GetZProj();
+
+	runData.AinitB = run->GetATarg();
+	runData.ZinitB = run->GetZTarg();
+
+	runData.pzA = run->GetPProj()*run->GetAProj()*GeV;
+	runData.pzB = run->GetPTarg()*run->GetATarg()*GeV;
+
+	runData.SqrtSnn = run->GetNNSqrtS();
+
+	runData.XsectTot = run->GetSigma();
+
+	//runData.iterations = run->GetNEvents();
+
+    runData.iterations = ((TTree *)fIn->Get("events"))->GetEntries();
+    
+	runData.isCollider = true;
+
+	runData.isQMD = true;
+
+    runData.fileName = inputFileName;
+
+    //runData.CritDist = 1.8; //TODO: adjust number to describe the data
+
+	runData.CritDist = critDist;   // ← значение приходит извне
+
+
+	fIn->Close();
+
+	return runData;
+}

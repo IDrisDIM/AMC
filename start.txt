@@ -1,0 +1,4 @@
+source /home/oem/WORKLAST/AAMCC-newDataHandle/geant4-10.4-install/bin/geant4.sh
+export MCINI=/home/oem/WORKLAST/AAMCC-newDataHandle/mcini
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/oem/WORKLAST/AAMCC-newDataHandle/geant4-10.4-install/lib
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/oem/WORKLAST/AAMCC-newDataHandle/mcini/build

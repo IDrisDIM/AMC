@@ -1,0 +1,60 @@
+# ===== ROOT files =====
+*.root
+*.root.*
+*.root_*
+
+# ===== Images =====
+*.png
+*.pdf
+*.jpg
+*.jpeg
+*.eps
+*.svg
+
+# ===== Build artifacts =====
+build/
+*.o
+*.so
+*.a
+*.d
+*.mod
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+install_manifest.txt
+
+# ===== Geant4 installation (тяжёлая папка) =====
+geant4.10.04.p03/
+geant4.10.04.p03-build/
+geant4-10.4-install/
+geant4-*/
+
+# ===== MCini (если не хотите трекать как submodule) =====
+mcini/build/
+mcini-install/
+
+# ===== Python =====
+__pycache__/
+*.pyc
+*.pyo
+.ipynb_checkpoints/
+
+# ===== IDE =====
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ===== OS =====
+.DS_Store
+Thumbs.db
+
+# ===== Temporary files =====
+*.tmp
+grate_answers.tmp
+Event.txt
+
+# ===== Logs =====
+*.log
