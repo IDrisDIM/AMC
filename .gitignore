@@ -58,3 +58,7 @@ Event.txt
 
 # ===== Logs =====
 *.log
+mcini/
+
+# ===== opencode =====
+.opencode/
