@@ -29,6 +29,10 @@ public:
    
     G4double GetEnergyDampEricson(G4int A);
 
+    G4double GetEnergyHybridGS_ALADIN(G4int A);
+
+    G4double GetEnergySmoothHybridGS_ALADIN(G4int A);
+
     G4double GetEnergyHybridFit(G4int A);
 
     void SetInitNuclMass(G4int initA_in);
@@ -48,6 +52,8 @@ public:
     void SetParametersHybridFit(G4double a0_in, G4double a1_in, G4double a2_in, G4double a3_in, G4double a4_in, G4double a5_in, G4double a6_in, G4double sigma1_in, G4double sigma2_in, G4double sigma3_in);
 
 private:
+    void ComputeAlphaSwitchGS();
+
      G4double g0;
      G4double g1;
      G4double e0;
@@ -61,6 +67,7 @@ private:
      G4double bP0;
      G4double bP1;
      G4double alphaSwitch;
+     G4double alphaSwitchGS;
 
     G4int initA;
     G4int ExEnLabel;

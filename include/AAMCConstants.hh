@@ -110,8 +110,8 @@ struct AAMCCrun
     G4bool isIniCond = false;
 
     // Phase-space MST control
-    G4double MST_p0 = -1.0; // <=0: выключено (пространственный MST); >0: включено
-    G4double MST_r0 = 1.0;  // фм, используется только если MST_p0 > 0
+    G4double MST_V0 = 0.3;        // <=0: выключено (пространственный MST); >0: порог |ΔV| (безразмерный, V=P/E)
+    G4int    MST_metricMode = 1;  // 0 - spatial, 1 - pair-CM (1 pass), 2 - pair-CM (2 passes, constant V0, growing dmin)
 };
 
 // #endif

@@ -59,8 +59,8 @@ public:
   inline G4double GetUpB() { return runData.upperLimitB; }
   inline InitialConditions GetInitialContidions() { return *InCond; }
   inline G4double GetCriticalDistance() { return runData.CritDist; }
-  inline G4double GetMST_p0() { return runData.MST_p0; }
-  inline G4double GetMST_r0() { return runData.MST_r0; }
+  inline G4double GetMST_V0() { return runData.MST_V0; }
+  inline G4int GetMST_metricMode() { return runData.MST_metricMode; }
   inline G4double GetAngle() { return CLHEP::pi * angle / 180; } // left for the future development of polarized beams
   inline G4bool ToFileOrNot() { return runData.InFileOrNot; }
   inline uint GetReaderID() const { return runData.isQMD; }

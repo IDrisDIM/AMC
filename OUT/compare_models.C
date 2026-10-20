@@ -110,8 +110,8 @@ static void Compare1D(std::vector<TH1*> hists,
         h->SetLineColor(colors[i % 10]);
         h->SetMarkerColor(colors[i % 10]);
         h->SetMarkerStyle(markers[i % 10]);
-        h->SetMarkerSize(1.1);
-        h->SetLineWidth(2);
+        h->SetMarkerSize(1.);
+        h->SetLineWidth(1);
         if (h->Integral() > 0) h->Scale(1.0 / h->Integral());
         h->SetTitle(title);
     }
@@ -197,14 +197,21 @@ void compare_models()
     // ==================== USER CONFIGURATION ====================
     std::vector<TString> filePaths = {
         //"/home/oem/WORKLAST/AAMCC-newDataHandle/OUT/XeXe_densEn1/Out_XeXe_EnergyDens1_mcini_.root",
-        "/home/oem/WORKLAST/AAMCC-newDataHandle/OUT/XeXe_densEn7/Out_XeXe_EnergyDens7_mcini_.root",
-        "/home/oem/WORKLAST/AAMCC-newDataHandle/OUT/XeXe_densEn4dmin21/OutUnigen_XeXe_dmin2p1_mcini_.root",
+        //"/home/oem/WORKLAST/AAMCC-newDataHandle/OUT/XeXe_densEn4dmin21_P300/Out_XeXe_dmin21_p300_mcini_.root",
+        //"/home/oem/WORKLAST/AAMCC-newDataHandle/OUT/XeXe_densEn4dmin21_P0/Out_XeXe_dmin21_p0_mcini_.root",
+        //"/home/oem/WORKLAST/unigen/UrQMDAMST/dataUrQMDAMST2.root",
+        "/home/oem/WORKLAST/AAMCC-newDataHandle/OUT/out_XeXe_dmin2p5_Pmin300New2mode2newVCUT/Out_xexe130_mcini_.root",
+        "/home/oem/WORKLAST/DCMSMMmodel/output_hist_short.root",
+        "/home/oem/WORKLAST/AAMCC-newDataHandle/OUT/out_XeXe_dmin2p5_Pmin300New2/xexe130_mcini_.root",
         "/home/oem/WORKLAST/DCMSMMmodel/output_hist.root",
     };
 
     std::vector<TString> modelNames = {
-        "EnergyDens7",
-        "EnergyDens4 2.1",
+        //"EnergyDens4 2.1 p0=0.3",
+        //"EnergyDens4 2.1",
+        "AMC mode2 new",
+        "DCM b<13.8 fm",
+        "MF new",
         "DCM",
     };
 
@@ -242,6 +249,7 @@ void compare_models()
         for (int pad = 0; pad < 4; ++pad) {
             c->cd(pad + 1);
             std::vector<TH1*> hists;
+            std::vector<TString> namesFound;
             for (int i = 0; i < N; ++i) {
                 TFile* f = TFile::Open(filePaths[i], "READ");
                 if (!f || f->IsZombie()) {
@@ -249,11 +257,11 @@ void compare_models()
                     continue;
                 }
                 TH1* h = (TH1*)f->Get(hnames[pad]);
-                if (h) { h->SetDirectory(0); hists.push_back(h); }
+                if (h) { h->SetDirectory(0); hists.push_back(h); namesFound.push_back(modelNames[i]); }
                 else std::cerr << "No " << hnames[pad] << " in " << filePaths[i] << std::endl;
                 f->Close();
             }
-            Compare1D(hists, modelNames, titles[pad], false, pad == 0);
+            Compare1D(hists, namesFound, titles[pad], false, pad == 0);
         }
         c->SaveAs(outDir + "/Z3_kinematics_comparison.png");
         
@@ -275,14 +283,15 @@ void compare_models()
         for (int pad = 0; pad < 4; ++pad) {
             c->cd(pad + 1);
             std::vector<TH1*> hists;
+            std::vector<TString> namesFound;
             for (int i = 0; i < N; ++i) {
                 TFile* f = TFile::Open(filePaths[i], "READ");
                 if (!f || f->IsZombie()) continue;
                 TH1* h = (TH1*)f->Get(hnames[pad]);
-                if (h) { h->SetDirectory(0); hists.push_back(h); }
+                if (h) { h->SetDirectory(0); hists.push_back(h); namesFound.push_back(modelNames[i]); }
                 f->Close();
             }
-            Compare1D(hists, modelNames, titles[pad], false, pad == 0);
+            Compare1D(hists, namesFound, titles[pad], false, pad == 0);
         }
         c->SaveAs(outDir + "/Z2_kinematics_comparison.png");
         
@@ -309,17 +318,18 @@ void compare_models()
         for (int pad = 0; pad < 6; ++pad) {
             c->cd(pad + 1);
             std::vector<TProfile*> profs;
+            std::vector<TString> namesFound;
             for (int i = 0; i < N; ++i) {
                 TFile* f = TFile::Open(filePaths[i], "READ");
                 if (!f || f->IsZombie()) continue;
                 TProfile* p = (TProfile*)f->Get(pnames[pad]);
-                if (p) { p->SetDirectory(0); profs.push_back(p); }
+                if (p) { p->SetDirectory(0); profs.push_back(p); namesFound.push_back(modelNames[i]); }
                 else std::cerr << "No " << pnames[pad] << " in " << filePaths[i] << std::endl;
                 f->Close();
             }
             // crossZero=false для <N>, <A>, <Z> — они всегда положительны
             bool crossZero = (pad == 3 || pad == 5);  // только для <Z^2> и <Z>
-            CompareProfile(profs, modelNames, titles[pad], pad == 0, crossZero);
+            CompareProfile(profs, namesFound, titles[pad], pad == 0, crossZero);
         }
         c->SaveAs(outDir + "/fragmentation_moments_comparison.png");
         
@@ -340,14 +350,15 @@ void compare_models()
             for (int pad = 0; pad < 2; ++pad) {
                 c->cd(pad + 1);
                 std::vector<TH1*> hists;
+                std::vector<TString> namesFound;
                 for (int i = 0; i < N; ++i) {
                     TFile* f = TFile::Open(filePaths[i], "READ");
                     if (!f || f->IsZombie()) continue;
                     TH1* h = (TH1*)f->Get(hnames[pad]);
-                    if (h) { h->SetDirectory(0); hists.push_back(h); }
+                    if (h) { h->SetDirectory(0); hists.push_back(h); namesFound.push_back(modelNames[i]); }
                     f->Close();
                 }
-                Compare1D(hists, modelNames, titles[pad], true, pad == 0);
+                Compare1D(hists, namesFound, titles[pad], true, pad == 0);
             }
         }
 
@@ -366,14 +377,15 @@ void compare_models()
             for (int pad = 0; pad < 4; ++pad) {
                 c->cd(pad + 3);
                 std::vector<TProfile*> profs;
+                std::vector<TString> namesFound;
                 for (int i = 0; i < N; ++i) {
                     TFile* f = TFile::Open(filePaths[i], "READ");
                     if (!f || f->IsZombie()) continue;
                     TProfile* p = (TProfile*)f->Get(pnames[pad]);
-                    if (p) { p->SetDirectory(0); profs.push_back(p); }
+                    if (p) { p->SetDirectory(0); profs.push_back(p); namesFound.push_back(modelNames[i]); }
                     f->Close();
                 }
-                CompareProfile(profs, modelNames, titles[pad], false, false);
+                CompareProfile(profs, namesFound, titles[pad], false, false);
             }
         }
         c->SaveAs(outDir + "/fragmentation_comparison.png");
@@ -385,4 +397,142 @@ void compare_models()
     std::cout << "  - Z2_kinematics_comparison.png"         << std::endl;
     std::cout << "  - fragmentation_moments_comparison.png" << std::endl;
     std::cout << "  - fragmentation_comparison.png"         << std::endl;
+}
+
+
+#include <TCanvas.h>
+#include <TGraph.h>
+#include <TLegend.h>
+#include <TLine.h>
+#include <TStyle.h>
+#include <TAxis.h>
+#include <TString.h>
+#include <cmath>
+#include <iostream>
+
+void mf_transition_compare(double lowBound = 3.0, double upBound = 5.0)
+{
+    gStyle->SetOptStat(0);
+    gStyle->SetOptTitle(1);
+    gStyle->SetPadTickX(1);
+    gStyle->SetPadTickY(1);
+
+    // ---- Параметры ----
+    const int N = 400;
+    const double E_min = 0.0;
+    const double E_max = 15.0;
+
+    // ---- График 1: Hyperbolic tangent (как в оригинале AAMCC) ----
+    // aE = 1/(2*(upBound - lowBound))
+    // E0 = (upBound + lowBound)/2
+    // transF = 0.5*tanh((E - E0)/aE) + 0.5
+    double aE_tanh = 1.0 / (2.0 * (upBound - lowBound));
+    double E0_tanh = (upBound + lowBound) / 2.0;
+
+    TGraph* g_tanh = new TGraph(N + 1);
+    g_tanh->SetName("g_tanh");
+    g_tanh->SetTitle(Form("MF transition probability, window [%.1f, %.1f] MeV/nucleon",
+                          lowBound, upBound));
+
+    for (int i = 0; i <= N; ++i) {
+        double E = E_min + (E_max - E_min) * i / N;
+        double transF = 0.5 * std::tanh((E - E0_tanh) / aE_tanh) + 0.5;
+        g_tanh->SetPoint(i, E, transF);
+    }
+    g_tanh->SetLineColor(kRed + 2);
+    //g_tanh->SetLineWidth(2.5);
+    g_tanh->SetLineStyle(1);
+
+    // ---- График 2: Linear interpolation ----
+    // transF = 0 при E < lowBound
+    // transF = 1 при E > upBound
+    // transF линейно между
+    TGraph* g_lin = new TGraph(N + 1);
+    g_lin->SetName("g_lin");
+
+    for (int i = 0; i <= N; ++i) {
+        double E = E_min + (E_max - E_min) * i / N;
+        double transF;
+        if (E <= lowBound)      transF = 0.0;
+        else if (E >= upBound)  transF = 1.0;
+        else                    transF = (E - lowBound) / (upBound - lowBound);
+        g_lin->SetPoint(i, E, transF);
+    }
+    g_lin->SetLineColor(kBlue + 2);
+    //g_lin->SetLineWidth(2.5);
+    g_lin->SetLineStyle(2);
+
+    // ---- График 3: Резкий порог (для справки) ----
+    // transF = 0 при E < E0
+    // transF = 1 при E > E0
+    TGraph* g_step = new TGraph(N + 1);
+    g_step->SetName("g_step");
+    for (int i = 0; i <= N; ++i) {
+        double E = E_min + (E_max - E_min) * i / N;
+        double transF = (E < E0_tanh) ? 0.0 : 1.0;
+        g_step->SetPoint(i, E, transF);
+    }
+    g_step->SetLineColor(kGray + 2);
+    //g_step->SetLineWidth(1.5);
+    g_step->SetLineStyle(3);
+
+    // ---- Канвас ----
+    TCanvas* c = new TCanvas("c_mf_transition",
+                             Form("MF transition: [%.1f, %.1f] MeV/nucleon", lowBound, upBound),
+                             1200, 800);
+
+    g_tanh->GetXaxis()->SetTitle("E*/A (MeV/nucleon)");
+    g_tanh->GetYaxis()->SetTitle("P(MF)");
+    g_tanh->GetXaxis()->SetTitleSize(0.045);
+    g_tanh->GetYaxis()->SetTitleSize(0.045);
+    g_tanh->GetXaxis()->SetTitleOffset(1.1);
+    g_tanh->GetYaxis()->SetTitleOffset(1.2);
+    g_tanh->GetYaxis()->SetRangeUser(-0.05, 1.05);
+    g_tanh->GetXaxis()->SetRangeUser(E_min, E_max);
+
+    g_tanh->Draw("AL");
+    g_lin->Draw("L SAME");
+    g_step->Draw("L SAME");
+
+    // ---- Вертикальные линии на границах окна ----
+    TLine* l_low = new TLine(lowBound, -0.05, lowBound, 1.05);
+    l_low->SetLineStyle(3);
+    l_low->SetLineColor(kGray + 1);
+    l_low->Draw("same");
+
+    TLine* l_up = new TLine(upBound, -0.05, upBound, 1.05);
+    l_up->SetLineStyle(3);
+    l_up->SetLineColor(kGray + 1);
+    l_up->Draw("same");
+
+    // ---- Легенда ----
+    TLegend* leg = new TLegend(0.55, 0.15, 0.88, 0.35);
+    leg->SetBorderSize(0);
+    leg->SetFillColorAlpha(kWhite, 0.85);
+    leg->SetTextSize(0.032);
+    leg->AddEntry(g_tanh, Form("tanh (aE=%.3f, E0=%.2f)", aE_tanh, E0_tanh), "l");
+    leg->AddEntry(g_lin,  "linear interpolation", "l");
+    leg->AddEntry(g_step, "sharp step", "l");
+    leg->Draw();
+
+    // ---- Дополнительная информация ----
+    // Ширина переходной зоны
+    double deltaE_tanh_90 = 2.0 * aE_tanh * std::atanh(0.9); // ±90% диапазон
+    double deltaE_lin_100 = upBound - lowBound;
+
+    // Смещение центра tanh
+    double center_tanh = E0_tanh;
+    double center_lin  = 0.5 * (lowBound + upBound);
+
+    std::cout << "---- MF transition parameters ----" << std::endl;
+    std::cout << "Window: lowBound = " << lowBound << " MeV/n, upBound = " << upBound << " MeV/n" << std::endl;
+    std::cout << "tanh: aE = " << aE_tanh << ", E0 = " << E0_tanh << std::endl;
+    std::cout << "tanh: 10-90% width = " << 2.0 * aE_tanh * std::atanh(0.8)
+              << " MeV/n (approximately)" << std::endl;
+    std::cout << "linear: full transition width = " << deltaE_lin_100 << " MeV/n" << std::endl;
+    std::cout << "linear: center = " << center_lin << " MeV/n" << std::endl;
+
+    c->SaveAs(Form("mf_transition_low%.0f_up%.0f.png", lowBound, upBound));
+    std::cout << "Saved: mf_transition_low"
+              << lowBound << "_up" << upBound << ".png" << std::endl;
 }

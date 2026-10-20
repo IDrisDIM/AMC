@@ -1,6 +1,7 @@
 // Igor Pshenichnov 06.08.2008 + Alexandr Svetlichnyi at present
 // ROOT 6 or higher and Geant4installation is reqired
 // Geant4 v10.4 -- v9.6 is supported.
+#include <cstdlib>
 
 #include "G4RunManager.hh"
 #include "G4StateManager.hh"
@@ -136,23 +137,39 @@ int main()
     }
 
     // ============================================================
-    // MST phase-space mode: задаётся через p0 в run_afterburner
-    //   p0 <= 0 → пространственный MST (как раньше)
-    //   p0 >  0 → фазовый MST с этим масштабом импульса (МэВ/c)
+    // MST режим задаётся в run_afterburner (dmin, p0, metricMode):
+    //   p0 <= 0 → только пространственный MST (режим 0)
+    //   p0 >  0 → фазовый MST с порогом скорости |dV| = p0 (безразмерный, V = P/E)
+    // metricMode: 0 - spatial,
+    //             1 - pair-CM, 1 проход,
+    //             2 - pair-CM, 2 иерархических прохода с постоянным V0
+    //                 (2-й проход: dmin_eff = d0·(A_i+A_j)^(1/3))
     // ============================================================
     {
-        double p0 = histoManager.GetMST_p0();
-        double r0 = histoManager.GetMST_r0();
-        bool phaseSpace = (p0 > 0.0);
+        double V0 = histoManager.GetMST_V0();
+        bool phaseSpace = (V0 > 0.0);
+
+        int metricMode = histoManager.GetMST_metricMode();
+
+        // Если фазовая метрика отключена (V0 ≤ 0) — принудительно режим 0
+        if (!phaseSpace) metricMode = 0;
+
+        clusters->SetV0(V0 > 0.0 ? V0 : 0.3);
         clusters->SetPhaseSpaceMode(phaseSpace);
-        clusters->SetR0(r0);
-        clusters->SetP0(p0 > 0.0 ? p0 : 300.0);   // p0<=0 → режим выключен, значение не важно
+        clusters->SetMetricMode(metricMode);
+
+        std::cout << "[MST] Metric mode = " << metricMode << " (";
+        if (metricMode == 0)      std::cout << "pure spatial";
+        else if (metricMode == 1) std::cout << "pair-CM, 1 pass";
+        else if (metricMode == 2) std::cout << "pair-CM, 2 passes, constant V0, growing dmin";
+        else                      std::cout << "unknown";
+        std::cout << ")";
+
         if (phaseSpace) {
-            std::cout << "[MST] Phase-space mode ENABLED: r0 = " << r0
-                      << " fm, p0 = " << p0 << " MeV/c" << std::endl;
-        } else {
-            std::cout << "[MST] Phase-space mode DISABLED (pure spatial MST)" << std::endl;
+            std::cout << ", dmin = " << histoManager.GetCriticalDistance()
+                      << " fm, V0 = " << V0 << " (|dV|)";
         }
+        std::cout << std::endl;
     }
 
     //Setting up ExcitationHandler

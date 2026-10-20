@@ -22,12 +22,21 @@ G4cout<<"Excitation energy will be calculated with the "<<ExEnLabel_in<<" way  \
 
     SetParametersCorrectedALADINFromFile();
     SetParametersALADIN(11,0.07,2);//8.13;0.07;2
+    ComputeAlphaSwitchGS();
 }
 
 ExcitationEnergy::~ExcitationEnergy(){}
 
 void ExcitationEnergy::SetInitNuclMass(G4int initA_in) {
     initA = initA_in;
+}
+
+void ExcitationEnergy::ComputeAlphaSwitchGS() {
+    G4double e0_gs = 11.5;
+    alphaSwitchGS = (e0_gs/Ebound)*(e0_gs/Ebound);
+    for(int k = 0; k < 100; k++){
+    alphaSwitchGS = pow((e0_gs/Ebound)*(alphaSwitchGS*(1-1/(G4double(initA)))+1/(G4double(initA))-alphaSwitchGS*alphaSwitchGS),0.66666666666666);
+    }
 }
 
 void ExcitationEnergy::SetParametersALADIN(G4double e0_in, G4double sigma0_in, G4double b0_in) {
@@ -176,6 +185,28 @@ G4double ExcitationEnergy::GetEnergyDampEricson(G4int A) {
     return energy;
 }
 
+G4double ExcitationEnergy::GetEnergyHybridGS_ALADIN(G4int A) {
+    G4double energy = 0;
+    if(initA - A < alphaSwitchGS*initA){energy = GetEnergyGaimardSchmidt(A);}
+    else{energy = GetEnergyALADIN(A);}
+    return energy;
+}
+
+G4double ExcitationEnergy::GetEnergySmoothHybridGS_ALADIN(G4int A) {
+    const G4double delta = 0.02;
+    G4double deltaEff = delta;
+    if(alphaSwitchGS < deltaEff) deltaEff = alphaSwitchGS;
+    if(1.0 - alphaSwitchGS < deltaEff) deltaEff = 1.0 - alphaSwitchGS;
+    G4double x = G4double(initA - A) / G4double(initA);
+    G4double pGS;
+    if(x <= alphaSwitchGS - deltaEff) pGS = 1.0;
+    else if(x >= alphaSwitchGS + deltaEff) pGS = 0.0;
+    else pGS = (alphaSwitchGS + deltaEff - x) / (2.0 * deltaEff);
+    G4double w = CLHEP::RandFlat::shoot();
+    if(w < pGS){return GetEnergyGaimardSchmidt(A);}
+    else{return GetEnergyALADIN(A);}
+}
+
 G4double ExcitationEnergy::GetEnergyHybridFit(G4int A) {
     CLHEP::RandGauss randGauss(0,1);
     G4double alpha = G4double(A)/G4double(initA);
@@ -225,6 +256,14 @@ G4double ExcitationEnergy::GetEnergy(G4int A) {
         }
         case 7:{
             energy = GetEnergyHybridFit(A);
+            break;
+        }
+        case 8:{
+            energy = GetEnergyHybridGS_ALADIN(A);
+            break;
+        }
+        case 88:{
+            energy = GetEnergySmoothHybridGS_ALADIN(A);
             break;
         }
         default:{

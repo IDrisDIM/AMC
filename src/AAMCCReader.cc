@@ -1,4 +1,5 @@
 #include "AAMCCReader.hh"
+#include <cstdlib>
 
 AAMCCReader::AAMCCReader()
 {
@@ -29,13 +30,20 @@ void AAMCCReader::ReadFirstStage(AAMCCrun *runData, InitialConditions *InCond)
       std::cout << "Please enter critical distance (in fm) : ";
       std::cin >> userCritDist;
 
-      G4double userP0;
-      std::cout << "Enter MST p0 (MeV/c, <=0 to disable phase-space MST) : ";
-      std::cin >> userP0;
+      G4double userV0;
+      std::cout << "Enter MST V0 (velocity threshold |dV|, <=0 to disable phase-space MST) : ";
+      std::cin >> userV0;
+
+      G4int userMetricMode;
+      std::cout << "Enter MST metric mode (0 - spatial, 1 - pair-CM 1 pass, 2 - pair-CM 2 passes, constant V0, growing dmin) : ";
+      std::cin >> userMetricMode;
+
+      
 
       *runData = getTheRunData(inputFileName, userCritDist);
-      runData->MST_p0 = userP0;
-      runData->MST_r0 = 1.0;   // фм (при необходимости можно менять)
+      runData->MST_V0 = userV0;
+      runData->MST_metricMode = userMetricMode;
+      
       InCond->SetConditions(*runData);
       runData->SysA = InCond->GetSysA();
       runData->SysB = InCond->GetSysB();
@@ -53,13 +61,20 @@ void AAMCCReader::ReadFirstStage(AAMCCrun *runData, InitialConditions *InCond)
       std::cout << "Please enter critical distance (in fm) : ";
       std::cin >> userCritDist;
 
-      G4double userP0;
-      std::cout << "Enter MST p0 (MeV/c, <=0 to disable phase-space MST) : ";
-      std::cin >> userP0;
+      G4double userV0;
+      std::cout << "Enter MST V0 (velocity threshold |dV|, <=0 to disable phase-space MST) : ";
+      std::cin >> userV0;
+
+      G4int userMetricMode;
+      std::cout << "Enter MST metric mode (0 - spatial, 1 - pair-CM 1 pass, 2 - pair-CM 2 passes, constant V0, growing dmin) : ";
+      std::cin >> userMetricMode;
+
+      
 
       *runData = getTheRunData(inputFileName, userCritDist);
-      runData->MST_p0 = userP0;
-      runData->MST_r0 = 1.0;
+      runData->MST_V0 = userV0;
+      runData->MST_metricMode = userMetricMode;
+      
 
       InCond->SetConditions(*runData);
       runData->SysA = InCond->GetSysA();
@@ -162,9 +177,9 @@ void AAMCCReader::ReadFirstStage(AAMCCrun *runData, InitialConditions *InCond)
 void AAMCCReader::ReadSecondStage(AAMCCrun *runData, InitialConditions *InCond)
 {
   // Information about the second stage
-  while ((runData->ExExStatLabel < 0) || (runData->ExExStatLabel > 7))
+  while ((runData->ExExStatLabel < 0) || (runData->ExExStatLabel > 88))
   {
-    std::cout << "Please choose the level density function to be used: 1 - Ericson, 2 - Gaimard-Schmidt, 3 - ALADIN parametrization, 4 - Hybrid of 1 and 3, 7 - Fit of Hybrid : ";
+    std::cout << "Please choose the level density function to be used: 1 - Ericson, 2 - Gaimard-Schmidt, 3 - ALADIN parametrization, 4 - Hybrid of 1 and 3, 7 - Fit of Hybrid, 8 - Hybrid of 2 and 3, 88 - Smooth Hybrid of 2 and 3 : ";
     std::cin >> runData->ExExStatLabel;
   }
 
@@ -174,7 +189,8 @@ void AAMCCReader::ReadSecondStage(AAMCCrun *runData, InitialConditions *InCond)
     std::cin >> runData->CritDist;
   }
 
-  runData->DeExModel = "G4";
+  const char *deexEnv = std::getenv("AAMCC_DEEX_MODEL");
+  runData->DeExModel = (deexEnv && deexEnv[0] != '\0') ? deexEnv : "G4";
   while (runData->DeExModel.empty())
   {
     std::cout << "Choose a model for fragment deexcitation. G4 and AAMCC options are available: ";

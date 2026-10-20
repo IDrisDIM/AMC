@@ -28,15 +28,21 @@ struct Graph
     G4int V, E;
     vector< pair<G4double, iPair> > edges;
 
-    // Pointer to an array containing adjacency lists
-    list<G4int>* adj;
+    // Adjacency lists
+    vector< list<G4int> > adj;
 
     // Constructors
     Graph(G4int V, G4int E);
     Graph();
 
     // Destructor
-	~Graph();
+    ~Graph();
+
+    // Copy/Move
+    Graph(const Graph& other);
+    Graph& operator=(const Graph& other);
+    Graph(Graph&& other) noexcept;
+    Graph& operator=(Graph&& other) noexcept;
 
     // Utility function to add an edge
     void addEdge(G4int u, G4int v, G4double w);
@@ -106,15 +112,33 @@ class GMSTClustering{
 	inline G4double GetCD(std::string side) {return (side == "A" ?  CritDistA : CritDist);}
     void SetCDExEn(G4double Ex, G4int A);
     void SetAlpha(G4double alpha_in){alphaPow = alpha_in;}
-	Graph ClusterToGraph(aamcc::NucleonVector* nucleons, G4double A);
+	Graph ClusterToGraph(aamcc::NucleonVector* nucleons, double V0pass);
 
 	// ==== Phase-space MST controls ====
 	inline void SetPhaseSpaceMode(bool on) { usePhaseSpace = on; }
-	inline void SetR0(double r0_in)        { r0 = r0_in; }
-	inline void SetP0(double p0_in)        { p0 = p0_in; }
+	inline void SetV0(double V0_in)        { V0 = V0_in; }
 	inline bool GetPhaseSpaceMode() const  { return usePhaseSpace; }
-	inline double GetR0() const            { return r0; }
-	inline double GetP0() const            { return p0; }
+	inline double GetV0() const            { return V0; }
+
+        // ==== Режим метрики ====
+    // Условие по импульсу заменено условием по скорости: V = P/E (E — полная энергия).
+    // Критерий DCM-подобный (per-particle), а не разность |V_i' - V_j'|:
+    // 0 - чисто пространственный MST:
+    //     w = Δr, ребро живо при w < dmin
+    // 1 - метрика с per-particle cut в СЦМ пары (нуклон-нуклон), один проход при полном V0:
+    //     w = max(Δr_eff, d_V_max · dmin / V0), ребро живо при w < dmin
+    //     ⟺ Δr_eff < dmin И d_V_max < V0
+    //     Δr_eff = √(Δx²+Δy²+(g·Δz)²), g — Лоренц-фактор пары из β_z=(pz_i+pz_j)/(E_i+E_j);
+    //     d_V_max = max_k |V_k'|, V_k' = P_k'/E_k' — максимальная скорость нуклона пары
+    //     в СЦМ пары (как в DCM BCOAV2 / Киреев T3)
+    // 2 - та же метрика, но два иерархических прохода с постоянным V0 (см. GetClusters):
+    //     1) порог V0, dmin = d0 (нуклон-нуклон, PairMetric);
+    //     2) порог V0, dmin_eff = d0·(A_i+A_j)^(1/3) (кластер-кластер, PairMetric)
+    //     PairMetric для кластеров проверяет все нуклоны объединения в его СЦМ
+    //     (per-constituent). Вариант CrossCMMetric (проверка в СО другого кластера)
+    //     реализован, но отвергнут: он строже и даёт ещё меньше тяжёлых фрагментов.
+    inline void SetMetricMode(int m) { metricMode = m; }
+    inline int  GetMetricMode() const { return metricMode; }
 
 	std::vector<G4FragmentVector> GetClusters(aamcc::NucleonVector* nucleons, G4double ExA, G4double ExB, CLHEP::Hep3Vector boostA, CLHEP::Hep3Vector boostB);
 
@@ -145,8 +169,38 @@ class GMSTClustering{
 
     // ==== Phase-space MST controls (defaults) ====
     bool   usePhaseSpace = false;
-    double r0 = 1.0;      // фм
-    double p0 = 300.0;    // МэВ/c
+    double V0 = 0.3;      // безразмерный порог |V'| в СЦМ объединения (per-particle, DCM-like)
+    int metricMode = 1;   // 0 - spatial, 1 - pair-CM (1 pass), 2 - pair-CM (2 passes, constant V0)
+
+    // Узел для метрики: нуклон (A=1) или кластер (A>1)
+    struct Node {
+        double x, y, z;
+        double px, py, pz;
+        double mass;  // полная масса покоя узла, МэВ
+        int A;
+    };
+
+    // DCM-подобная метрика (per-particle cut в СЦМ объединения):
+    // группа узлов a и группы b (нуклон или составные кластеры).
+    // Ребро живо при Δr_eff < dmin И max_k |V_k'| < V0 в СЦМ объединения a+b.
+    // Возвращает w = max(Δr_eff, d_V_max · dmin / V0).
+    double PairMetric(const std::vector<Node>& a, const std::vector<Node>& b,
+                      double dmin, double V0pass) const;
+
+    // Альтернативная Cross-CM метрика (в mode 2 не используется):
+    // нуклоны кластера a проверяются в СЦМ кластера b и наоборот
+    // (кандидат проверяется в СО уже существующего кластера, как в DCM BCOAV2),
+    // без "максимума по всем нуклонам объединения" (не подавляет тяжёлые остатки).
+    double CrossCMMetric(const std::vector<Node>& a, const std::vector<Node>& b,
+                         double dmin, double V0pass) const;
+
+    // Второй проход: объединяет кластеры (списки индексов нуклонов),
+    // используя СЦМ-координату/импульс кластеров и порог
+    // dmin_eff = d0 · (A_i + A_j)^(1/3).
+    std::vector<std::vector<G4int> > MergeClusters(
+        const std::vector<std::vector<G4int> >& clusters,
+        const aamcc::NucleonVector* nucleons,
+        double d0, double V0pass) const;
 };
 
 

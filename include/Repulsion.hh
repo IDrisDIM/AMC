@@ -15,8 +15,8 @@ namespace RepulsionStage {
 
 constexpr double fm = 1e-15 * CLHEP::m;
 constexpr double theta = 0.3;
-constexpr double totalTime = 200 * fm / CLHEP::c_light;
-constexpr double iterations = 1000;
+constexpr double totalTime = 100 * fm / CLHEP::c_light;
+constexpr double iterations = 500;
 constexpr double max_adaptive_delta = std::numeric_limits<double>::max();
 
 G4FragmentVector CalculateRepulsion(G4FragmentVector frags, aamcc::NucleonVector nucleons, const std::vector<int>& maps);

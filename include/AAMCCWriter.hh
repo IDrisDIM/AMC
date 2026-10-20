@@ -64,15 +64,7 @@ private:
         tGlauber->Branch("pZ_on_B", "std::vector", &event.pZonSideB, 128000, 1);
         tGlauber->Branch("impact_parameter", &event.b, "impact_parameter/f");
         tGlauber->Branch("Ex_En_per_nucleon", &event.ExEnA, "Ex_En_per_nucleon/f");
-
-        tClusters->Branch("Aa_cl", "std::vector", &event.A_cl, 128000, 1);
-        tClusters->Branch("Za_cl", "std::vector", &event.Z_cl, 128000, 1);
-        tClusters->Branch("d", &event.d_MstA, "d/d");
-        tClusters->Branch("Clust_num_a", &event.ClustNumA, "Clust_num/I");
-        tClusters->Branch("Ab_cl", "std::vector", &event.Ab_cl, 128000, 1);
-        tClusters->Branch("Zb_cl", "std::vector", &event.Zb_cl, 128000, 1);
-        tClusters->Branch("d_b", &event.d_MstB, "d/d");
-        tClusters->Branch("Clust_num_b", &event.ClustNumB, "Clust_num_b/I");
+        tGlauber->Branch("Ex_En_per_nucleon_B", &event.ExEnB, "Ex_En_per_nucleon_B/f");
 
         tClusters->Branch("Aa_cl", "std::vector", &event.A_cl, 128000, 1);
         tClusters->Branch("Za_cl", "std::vector", &event.Z_cl, 128000, 1);
