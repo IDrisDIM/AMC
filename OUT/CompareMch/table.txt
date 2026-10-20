@@ -1,0 +1,18 @@
+Event selection: Mch > 0
+(at least one charged hadron with -0.5 < y < 0.5; replaces the old b<13.8 fm cut)
+
+Matched systems: Xe-124 (A=124,Z=54) + Xe-130 (A=130,Z=54), T=3.8 AGeV (sqrt(s_NN)=3.263 GeV)
+
+Model                                    N_sel/N_tot   n_frag/ev   <Z>   Z>=35/ev   Z>=45/ev   Z>=50/ev
+DCM (Xe124+Xe130)                         4567/5000      7.091    8.13    0.700      0.478      0.318
+UrQMD-AMC (m1, dmin=3.0, V0=0.3, ld=2)    7326/7895      6.061    6.44    0.444      0.248      0.155
+
+Ratio AMC/DCM                                           0.855    0.792   0.634      0.519      0.487
+
+Notes:
+- Fragments: Z >= 2, both A and B sides, per selected event.
+- <Z> = mean charge per fragment.
+- DCM: 5000 events, b = 0.17-14.67 fm (only 4 events with b>13.98).
+- AAMCC input: 7895 events, b = 0-13.98 fm.
+- DCM file: /home/oem/WORKLAST/DCMSMMmodel/scr/XeXe_3p8/XeXe_event100.out
+- AAMCC file: OUT/scan_ld2_dmin/d30_v030/xexe130_mcini_.root (best config).
